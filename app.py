@@ -87,8 +87,6 @@ def storedata():
         if key in units:
             value = float(request.args.get(key))
             unit = units[key]
-        print(key,request.args.get(key),param,value,unit)
         if not (value is None or stationid is None):
             CUR.execute(insert,[stationid,param,value,unit])
-            print('---> inserted')
     return('OK')
