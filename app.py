@@ -68,6 +68,9 @@ def storedata():
         value = None
         unit = None
         param = key
+        if request.args.get(key) == -9999:
+            print(f"invalid parameter: {param}")
+            continue
         if key in['tempf','dewptf','windchillf', 'indoortempf']:
             value = (float(request.args.get(key))-32)*5/9
             unit = 'C'
