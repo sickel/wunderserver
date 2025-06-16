@@ -2,15 +2,21 @@ from flask import Flask, request
 
 import psycopg
 
+
+databasename = 'wdb'
+
 app = Flask(__name__)
-CONN = psycopg.connect('dbname=wdb')
+# To connect using alternative server / username / port, edit connectionstring 
+
+connectionstring = f'dbname={databasename}'
+CONN = psycopg.connect(connectionstring)
 CONN.autocommit = True
 CUR = CONN.cursor()
 @app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+def index():
+    return "<p>Wunderground server</p>"
 
-
+# Example url:
 # GET /weatherstation/update?ID=1&PASSWORD=Aaa&tempf=64.9&humidity=56&dewptf=48.9&windchillf=64.9&winddir=187&windspeedmph=1.79&windgustmph=2.24&rainin=0.000&dailyrainin=0.000&weeklyrainin=0.000&monthlyrainin=0.000&yearlyrainin=0.000&totalrainin=0.000&solarradiation=63.47&UV=0&indoortempf=73.9&indoorhumidity=46&absbaromin=30.106&baromin=29.914&temp4f=67.5&humidity4=41&lowbatt=0&dateutc=now&softwaretype=EasyWeatherPro_V5.2.2&action=updateraw&realtime=1&rtfreq=5
 """
 tempf 63.9
@@ -42,6 +48,13 @@ realtime 1
 rtfreq 5
 
 
+
+THe system is set up to store data in the database wdb on localhost on port 5432
+with the same username as is running the server. Adjustments on the connection
+can be done in the connection statement above or in ~/.pgpass
+
+The database need to have a table with (at least) the following fields:
+
 wdb=# \d pwsmeasure
                         Table "public.pwsmeasure"
   Column   |            Type             | Collation | Nullable | Default 
@@ -51,6 +64,15 @@ wdb=# \d pwsmeasure
  value     | double precision            |           | not null | 
  unit      | text                        |           |          | 
  timestamp | timestamp without time zone |           |          | now()
+
+
+The table should be indexed on stationid, parameter and timmestamp. There should also
+be a unique key on those three fields. There may be a index on value, it probably would 
+never make sense to have an index on unit. 
+
+the extention timescaledb will be helpful for managing the data when the table is growing
+larger.
+
 
 
 
