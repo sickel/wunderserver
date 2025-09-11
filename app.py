@@ -7,6 +7,7 @@ databasename = 'wdb'
 
 app = Flask(__name__)
 # To connect using alternative server / username / port, edit connectionstring 
+# preferably use ~/.pgpass to set up password for connection
 
 connectionstring = f'dbname={databasename}'
 CONN = psycopg.connect(connectionstring)
@@ -47,7 +48,7 @@ action updateraw
 realtime 1
 rtfreq 5
 
-
+The data are sent in imperial units. They are converted to SI before storing
 
 THe system is set up to store data in the database wdb on localhost on port 5432
 with the same username as is running the server. Adjustments on the connection
@@ -82,36 +83,43 @@ larger.
 
 @app.route("/weather", methods=['GET', 'POST'])
 def storedata():
-    units = {'solarradiation': 'W/m2', 'winddir': 'grader', 'humidity': '%', 'indoorhumidity': '%', 'lobatt': '', 'UV': '' }
-    # Todo: Same date for all parameters. Check if dateutc == now 
-    stationid = request.args.get('ID',None)
-    insert = 'insert into pwsmeasure(stationid,parameter,value,unit) values(%s,%s,%s,%s)'
-    for key in request.args.keys():
-        value = None
-        unit = None
-        param = key
-        if request.args.get(key) == -9999:
-            print(f"invalid parameter: {param}")
-            continue
-        if key in['tempf','dewptf','windchillf', 'indoortempf']:
-            value = (float(request.args.get(key))-32)*5/9
-            unit = 'C'
-            param = key[:-1]
-        if key.endswith('mph'):
-            value = float(request.args.get(key))*1609/3600
-            unit = 'm/s'
-            param = key[:-3]
-        if key.endswith('baromin'):
-            value = float(request.args.get(key))*33.8639
-            param = key[:-2]
-            unit = 'hPa'
-        if key.endswith( 'rainin'):
-            value = float(request.args.get(key))*25.4
-            unit = 'mm'
-            param = key[:-2]
-        if key in units:
-            value = float(request.args.get(key))
-            unit = units[key]
-        if not (value is None or stationid is None):
-            CUR.execute(insert,[stationid,param,value,unit])
+    try:
+        units = {'solarradiation': 'W/m2', 'winddir': 'grader', 'humidity': '%', 'indoorhumidity': '%', 'lobatt': '', 'UV': '' }
+        # Todo: Same date for all parameters. Check if dateutc == now 
+        stationid = request.args.get('ID',None)
+        insert = 'insert into pwsmeasure(stationid,parameter,value,unit) values(%s,%s,%s,%s)'
+        for key in request.args.keys():
+            value = None
+            unit = None
+            param = key
+            if request.args.get(key) == -9999:
+                print(f"invalid parameter: {param}")
+                continue
+            if key in['tempf','dewptf','windchillf', 'indoortempf']:
+                value = (float(request.args.get(key))-32)*5/9
+                unit = 'C'
+                param = key[:-1]
+            if key.endswith('mph'):
+                value = float(request.args.get(key))*1609/3600
+                unit = 'm/s'
+                param = key[:-3]
+            if key.endswith('baromin'):
+                value = float(request.args.get(key))*33.8639
+                param = key[:-2]
+                unit = 'hPa'
+            if key.endswith( 'rainin'):
+                value = float(request.args.get(key))*25.4
+                unit = 'mm'
+                param = key[:-2]
+            if key in units:
+                value = float(request.args.get(key))
+                unit = units[key]
+            if not (value is None or stationid is None):
+                CUR.execute(insert,[stationid,param,value,unit])
+    except Exception as e:
+        # If anything fails, we just ignore that dataset and log the problems
+        with open('error.log','w') as logfile:
+            logfile.write(e)
+            logfile.write(request.args)
+            logfile.write('\n')
     return('OK')
