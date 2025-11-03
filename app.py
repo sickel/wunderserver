@@ -86,15 +86,15 @@ def storedata():
     try:
         units = {'solarradiation': 'W/m2', 'winddir': 'grader', 'humidity': '%', 'indoorhumidity': '%', 'lobatt': '', 'UV': '' }
         stationid = request.args.get('ID',None)
-        if request.args.get('dateutc',None) == 'now':
+        timestamp = request.args.get('dateutc',None) 
+        if timestamp  == 'now':
             # Using the default now()-value
             insert = 'insert into pwsmeasure(stationid,parameter,value,unit) values(%s,%s,%s,%s)'
         else:
             insert = 'insert into pwsmeasure(stationid,parameter,value,unit,timestamp) values(%s,%s,%s,%s,%s)'
-            timestamp = request.args.get('dateutc',None)
             if timestamp is None:
                 # No time information is given, something is wrong
-                 
+                pass 
         for key in request.args.keys():
             value = None
             unit = None
@@ -126,8 +126,8 @@ def storedata():
     except Exception as e:
         # If anything fails, we just ignore that dataset and log the problems
         with open('error.log','a') as logfile:
-            logfile.write('----')
-            logfile.write(str(e))
+            logfile.write('----\n')
+            logfile.write(f'{str(e)}\n')
             logfile.write(json.dumps(request.args))
             logfile.write('\n')
     return('OK')
