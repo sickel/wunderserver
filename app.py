@@ -1,7 +1,7 @@
 from flask import Flask, request
 
 import psycopg
-
+import json
 
 databasename = 'wdb'
 
@@ -85,9 +85,16 @@ larger.
 def storedata():
     try:
         units = {'solarradiation': 'W/m2', 'winddir': 'grader', 'humidity': '%', 'indoorhumidity': '%', 'lobatt': '', 'UV': '' }
-        # Todo: Same date for all parameters. Check if dateutc == now 
         stationid = request.args.get('ID',None)
-        insert = 'insert into pwsmeasure(stationid,parameter,value,unit) values(%s,%s,%s,%s)'
+        if request.args.get('dateutc',None) == 'now':
+            # Using the default now()-value
+            insert = 'insert into pwsmeasure(stationid,parameter,value,unit) values(%s,%s,%s,%s)'
+        else:
+            insert = 'insert into pwsmeasure(stationid,parameter,value,unit,timestamp) values(%s,%s,%s,%s,%s)'
+            timestamp = request.args.get('dateutc',None)
+            if timestamp is None:
+                # No time information is given, something is wrong
+                 
         for key in request.args.keys():
             value = None
             unit = None
@@ -118,8 +125,11 @@ def storedata():
                 CUR.execute(insert,[stationid,param,value,unit])
     except Exception as e:
         # If anything fails, we just ignore that dataset and log the problems
-        with open('error.log','w') as logfile:
-            logfile.write(e)
-            logfile.write(request.args)
+        with open('error.log','a') as logfile:
+            logfile.write('----')
+            logfile.write(str(e))
+            logfile.write(json.dumps(request.args))
             logfile.write('\n')
     return('OK')
+
+
