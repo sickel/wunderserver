@@ -4,12 +4,13 @@ import psycopg
 import json
 
 databasename = 'wdb'
-
+username = 'morten'
+hostname = 'sjest'
 app = Flask(__name__)
 # To connect using alternative server / username / port, edit connectionstring 
 # preferably use ~/.pgpass to set up password for connection
 
-connectionstring = f'dbname={databasename}'
+connectionstring = f'dbname={databasename} user={username} host={hostname}'
 CONN = psycopg.connect(connectionstring)
 CONN.autocommit = True
 CUR = CONN.cursor()
@@ -121,8 +122,11 @@ def storedata():
             if key in units:
                 value = float(request.args.get(key))
                 unit = units[key]
+            inserts = [stationid,param,value,unit]
+            if not timestamp == 'now':
+                inserts.append(timestamp)
             if not (value is None or stationid is None):
-                CUR.execute(insert,[stationid,param,value,unit])
+                CUR.execute(insert,inserts)
     except Exception as e:
         # If anything fails, we just ignore that dataset and log the problems
         with open('error.log','a') as logfile:
