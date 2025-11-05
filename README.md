@@ -40,8 +40,6 @@ The table should be indexed on stationid, parameter and timestamp. There should 
 be a unique key on those three fields. There may be a index on value, it probably would 
 never make sense to have an index on unit. 
 
-The extention timescaledb will be helpful for managing the data when the table is growing
-larger.
 ```
 create table pwsmeasure(
   stationid integer not null,
@@ -56,18 +54,14 @@ alter table pwsmeasure add primary key (stationid, parameter,timestamp);
 To set it up with apache:
 - make a directory, e.g. /var/www/wunderserver
 the directory should be writeable by the account running apache
-
-edit wunderserver.conf to adjust it to the diretory mentioned above and set the right port (If it is to run on 
+- edit wunderserver.conf to adjust it to the diretory mentioned above and set the right port (If it is to run on 
 the same port as another flask server, those two apps conf files has to be combined)
-
-copy app.py and wunderserver.wsgi to the directory
-
-make sure there is a .pgpass file in /var/www with login info, i.e. a line on the form
-
+- copy app.py and wunderserver.wsgi to the directory
+- make sure there is a .pgpass file in /var/www with login info, i.e. a line on the form
 hostname:database:port:username:password
-
 any part except password may be a wildcard.
 
-
+If the database connection has been down, data can be reuploaded by fetching data from apache's access.log file(s)
+and run reupload.sh on those lines. Make sure the address is set correctly
  
 
